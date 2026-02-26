@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leaflet Quick Start</title>
+    <!-- CSS Leaflet file Integration -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <!-- CSS personal file Integration -->
+    <link rel="stylesheet" type="text/css" href="charging_stations.css" />
+
+    <!-- JS file Integration -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+
+    <!-- Einbinden der JS-Daten -->
+    <script type="text/javascript" src="charging_stations_oslo.js"></script>
+    <script type="text/javascript" src="boundaryOslo.js"></script>
+
+    <style type="text/css">
+      #Kartencontainer {
+        border: 2px solid black;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <h1>EV Ladestationen in Oslo</h1>
+        <p class="subtitle">Interaktive Karte mit Ladepunkten des CCS Type 2</p>
+        <div class="description">
+          <p>
+            Diese Karte zeigt die Verteilung von Ladestationen in Oslo, kategorisiert nach Ladeleistung. Klicken Sie auf die Marker, um Details zu den Ladestationen zu sehen.
+          </p>
+        </div>
+      </header>
+
+      <!-- Map -->
+      <div class="map-wrapper">
+        <div id="Kartencontainer"></div>
+      </div>
+
+    <!-- Script -->
+    <script type="text/javascript">
+      // var map = L.map('Kartencontainer').setView(["lat","lon"], 13);
+
+      // Hinzufügen der Grundkarten
+      var OSM_Standard = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      );
+
+      var OSM_OEPNV = L.tileLayer(
+        "https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://www.openstreetmap.org/copyright">OpenPTMap</a> contributors',
+        },
+      );
+      
+      // Karte initialisieren und auf Oslo zentrieren
+      var map = L.map("Kartencontainer", {
+        layers: [OSM_Standard],
+      }).setView([59.92784, 10.741196], 12);
+
+      // Verschiedene Layer für unterschiedliche Ladeleistungen erstellen
+      var highPowerLayer = L.layerGroup();
+      var mediumPowerLayer = L.layerGroup();
+      var lowPowerLayer = L.layerGroup();
+
+      // Funktion für Marker-Styles
+      function getMarkerStyle(feature){
+        var powerString = feature.properties["socket:type2_combo:output"] || 0;
+        var power = parseFloat(powerString);
+        var color;
+        if (power > 150) {
+          color = "red"; // Hochleistung
+        } else if (power > 22 && power <= 150) {
+          color = "yellow"; // Mittelleistung
+        } else {
+          color = "green"; // Niedrigleistung
+        }
+        return {
+          radius: 5,
+          fillColor: color,
+          color: "#000",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8,
+        };
+      }
+
+      // Funktion zum Erzeugen von Popups
+      function popupsAll(feature, layer) {
+        if (feature && feature.properties) {
+          // Name der Ladestation, Kapazität und Typ in Popup anzeigen
+          var popupContent =
+            "<b>" +
+            (feature.properties.name || "Unbenannte Station") +
+            "</b><br>" +
+            "Capacity: " +
+            (feature.properties.capacity || "Unbekannt") +
+            "<br>" +
+            "Type: " +
+            (feature.properties.type || "Unbekannt");
+          layer.bindPopup(popupContent);
+        }
+      }
+
+      // GeoJSON-Daten verarbeiten und zu Layern hinzufügen
+      L.geoJson(ChargingStationsOslo, {
+          onEachFeature: popupsAll,
+          pointToLayer: function (feature, latlng) {
+            var style = getMarkerStyle(feature)
+            var marker = L.circleMarker(latlng, style);
+
+            // Ladeleistung ermitteln
+            var powerString = feature.properties["socket:type2_combo:output"] || 0;
+            var power = parseFloat(powerString);
+
+            // Marker zum richtigen Layer hinzufügen basierend auf der Ladeleistung
+            if (power > 150) {
+              marker.addTo(highPowerLayer);
+            } else if (power > 22 && power <= 150) {
+              marker.addTo(mediumPowerLayer);
+            } else {
+              marker.addTo(lowPowerLayer);
+            }
+
+            return marker;
+          },
+        });
+
+      // Stadtgrenze Oslo hinzufügen
+      var boundaryOslo = L.geoJson(boundaryOslo, {
+          style: function (feature) {
+            return {
+              color: "blue",
+              weight: 3,
+              opacity: 0.6,
+              fillColor: "none",
+              fillOpacity: 0.2,
+            };
+          },
+        });
+
+      // Base Layers
+      var baseLayers = {
+        "OSM Standard": OSM_Standard,
+        "OSM Public Transport": OSM_OEPNV,
+      };
+
+      // Overlay Layers
+      var overlayLayers = {
+        "🔴 Schnelllader (>50kW)": highPowerLayer,
+        "🟡 Normallader (22kW - 50kW)": mediumPowerLayer,
+        "🟢 Langsamlader (<22kW)": lowPowerLayer,
+        "Stadtgrenze Oslo": boundaryOslo,
+      };
+
+      // Hinzufügen der Layer-Kontrolle zur Karte
+      L.control.layers(baseLayers, overlayLayers, { collapsed: false }).addTo(map);
+
+      // Standardmäßig alle Ladestations-Layer anzeigen
+      OSM_Standard.addTo(map);
+      highPowerLayer.addTo(map);
+      mediumPowerLayer.addTo(map);
+      lowPowerLayer.addTo(map);
+      boundaryOslo.addTo(map);
+
+     
+    </script>
+  </body>
+</html>
