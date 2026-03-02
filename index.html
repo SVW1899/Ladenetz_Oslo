@@ -15,12 +15,21 @@
     <!-- CSS personal file Integration -->
     <link rel="stylesheet" type="text/css" href="charging_stations.css" />
 
+    <!-- CSS MiniMap Integration -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css"
+    />
+
     <!-- JS file Integration -->
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+
+    <!-- JS MiniMap Integration -->
+    <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
 
     <!-- Einbinden der JS-Daten -->
     <script type="text/javascript" src="charging_stations_oslo.js"></script>
@@ -79,11 +88,29 @@
         layers: [OSM_Standard],
       }).setView([59.92784, 10.741196], 12);
 
+      // MiniMap hinzufügen
+      var miniMapLayer = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          minZoom: 0,
+          maxZoom: 13,
+          attribution:
+            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      );
+
       // Verschiedene Layer für unterschiedliche Ladeleistungen erstellen
       var highPowerLayer = L.layerGroup();
       var mediumPowerLayer = L.layerGroup();
       var lowPowerLayer = L.layerGroup();
 
+      // Layer für MiniMap erstellen
+      var miniMap = new L.Control.MiniMap(miniMapLayer, {
+        toggleDisplay: true,
+        minimized: false,
+        position: "bottomright",
+      }).addTo(map);
+      
       // Funktion für Marker-Styles
       function getMarkerStyle(feature){
         var powerString = feature.properties["socket:type2_combo:output"] || 0;
