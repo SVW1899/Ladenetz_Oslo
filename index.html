@@ -27,7 +27,13 @@
       href="Leaflet.GraphicScale.min.css"
     />
 
-    <!-- JS file Integration -->
+    <!-- CSS Reachibility Integration -->
+     <link 
+     rel="stylesheet" 
+     href="https://cdn.jsdelivr.net/gh/trafforddatalab/leaflet.reachability@v2.0.1/leaflet.reachability.css"
+     />
+    
+     <!-- JS file Integration -->
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -40,6 +46,9 @@
     <!-- JS GraphicScale Integration -->
     <script src="Leaflet.GraphicScale.min.js"></script>
 
+    <!-- JS Reachibility Integration -->
+    <script src="https://cdn.jsdelivr.net/gh/trafforddatalab/leaflet.reachability@v2.0.1/leaflet.reachability.min.js"></script>
+    
     <!-- Einbinden der JS-Daten -->
     <script type="text/javascript" src="charging_stations_oslo.js"></script>
     <script type="text/javascript" src="boundaryOslo.js"></script>
@@ -112,17 +121,25 @@
       maxUnitsWidth: 200,
       }).addTo(map);
 
-      // Verschiedene Layer für unterschiedliche Ladeleistungen erstellen
-      var highPowerLayer = L.layerGroup();
-      var mediumPowerLayer = L.layerGroup();
-      var lowPowerLayer = L.layerGroup();
-
       // Layer für MiniMap erstellen
       var miniMap = new L.Control.MiniMap(miniMapLayer, {
         toggleDisplay: true,
         minimized: false,
         position: "bottomright",
       }).addTo(map);
+
+      // Hinzufügen des Reachability-Tools zur Karte
+      var reachabilityControl = L.control.reachability({
+        position: "topleft",
+        travelTime: 15, // Reisezeit in Minuten
+        travelMode: "car", // Reisemodus (z.B. 'car', 'bike', 'foot')
+        apiKey: "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjZlMTg2MTE3NGE4NjQwZWY4M2M5ZGRiM2EzNzg2NGM1IiwiaCI6Im11cm11cjY0In0=", // API-Schlüssel für den Dienst openrouteservice.org
+      }).addTo(map);
+
+      // Verschiedene Layer für unterschiedliche Ladeleistungen erstellen
+      var highPowerLayer = L.layerGroup();
+      var mediumPowerLayer = L.layerGroup();
+      var lowPowerLayer = L.layerGroup();
 
       // Funktion für Marker-Styles
       function getMarkerStyle(feature){
