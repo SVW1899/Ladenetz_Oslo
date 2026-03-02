@@ -21,6 +21,12 @@
       href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css"
     />
 
+    <!-- CSS GraphicScale Integration -->
+    <link
+      rel="stylesheet"
+      href="Leaflet.GraphicScale.min.css"
+    />
+
     <!-- JS file Integration -->
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -30,6 +36,9 @@
 
     <!-- JS MiniMap Integration -->
     <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
+    <!-- JS GraphicScale Integration -->
+    <script src="Leaflet.GraphicScale.min.js"></script>
 
     <!-- Einbinden der JS-Daten -->
     <script type="text/javascript" src="charging_stations_oslo.js"></script>
@@ -98,6 +107,10 @@
             '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         },
       );
+      // Hinzufügen des GraphicScale zur Karte
+      var graphicScale = L.control.graphicScale({fill: 'hollow',
+      maxUnitsWidth: 200,
+      }).addTo(map);
 
       // Verschiedene Layer für unterschiedliche Ladeleistungen erstellen
       var highPowerLayer = L.layerGroup();
@@ -110,7 +123,7 @@
         minimized: false,
         position: "bottomright",
       }).addTo(map);
-      
+
       // Funktion für Marker-Styles
       function getMarkerStyle(feature){
         var powerString = feature.properties["socket:type2_combo:output"] || 0;
